@@ -62,6 +62,7 @@ import com.google.common.base.Strings;
 import com.sun.mail.smtp.SMTPMessage;
 import com.sun.mail.smtp.SMTPSSLTransport;
 import com.sun.mail.smtp.SMTPTransport;
+import org.apache.commons.lang.BooleanUtils;
 
 @Component
 public class QuotaAlertManagerImpl extends ManagerBase implements QuotaAlertManager {
@@ -114,8 +115,10 @@ public class QuotaAlertManagerImpl extends ManagerBase implements QuotaAlertMana
         String smtpUsername = configs.get(QuotaConfig.QuotaSmtpUser.key());
         String smtpPassword = configs.get(QuotaConfig.QuotaSmtpPassword.key());
         String emailSender = configs.get(QuotaConfig.QuotaSmtpSender.key());
+        String useStartTLSStr = configs.get(QuotaConfig.QuotaSmtpUseStartTLS.key());
+        boolean useStartTLS = BooleanUtils.toBoolean(useStartTLSStr);
         _lockAccountEnforcement = "true".equalsIgnoreCase(configs.get(QuotaConfig.QuotaEnableEnforcement.key()));
-        _emailQuotaAlert = new EmailQuotaAlert(smtpHost, smtpPort, useAuth, smtpUsername, smtpPassword, emailSender, _smtpDebug);
+        _emailQuotaAlert = new EmailQuotaAlert(smtpHost, smtpPort, useAuth, smtpUsername, smtpPassword, emailSender, useStartTLS, _smtpDebug);
 
         return true;
     }
@@ -340,14 +343,16 @@ public class QuotaAlertManagerImpl extends ManagerBase implements QuotaAlertMana
         private final String _smtpUsername;
         private final String _smtpPassword;
         private final String _emailSender;
+        private final boolean smtpUseStartTLS;
 
-        public EmailQuotaAlert(String smtpHost, int smtpPort, boolean smtpUseAuth, final String smtpUsername, final String smtpPassword, String emailSender, boolean smtpDebug) {
+        public EmailQuotaAlert(String smtpHost, int smtpPort, boolean smtpUseAuth, final String smtpUsername, final String smtpPassword, String emailSender, boolean smtpUseStartTLS, boolean smtpDebug) {
             _smtpHost = smtpHost;
             _smtpPort = smtpPort;
             _smtpUseAuth = smtpUseAuth;
             _smtpUsername = smtpUsername;
             _smtpPassword = smtpPassword;
             _emailSender = emailSender;
+            this.smtpUseStartTLS = smtpUseStartTLS;
 
             if (!Strings.isNullOrEmpty(_smtpHost)) {
                 Properties smtpProps = new Properties();
@@ -363,6 +368,10 @@ public class QuotaAlertManagerImpl extends ManagerBase implements QuotaAlertMana
                 smtpProps.put("mail.smtps.auth", "" + smtpUseAuth);
                 if (!Strings.isNullOrEmpty(smtpUsername)) {
                     smtpProps.put("mail.smtps.user", smtpUsername);
+                }
+
+                if (smtpUseAuth) {
+                    smtpProps.put("mail.smtp.starttls.enable", smtpUseStartTLS);
                 }
 
                 if (!Strings.isNullOrEmpty(smtpUsername) && !Strings.isNullOrEmpty(smtpPassword)) {
@@ -407,7 +416,7 @@ public class QuotaAlertManagerImpl extends ManagerBase implements QuotaAlertMana
             msg.saveChanges();
 
             SMTPTransport smtpTrans = null;
-            if (_smtpUseAuth) {
+            if (_smtpUseAuth && !this.smtpUseStartTLS) {
                 smtpTrans = new SMTPSSLTransport(_smtpSession, new URLName("smtp", _smtpHost, _smtpPort, null, _smtpUsername, _smtpPassword));
             } else {
                 smtpTrans = new SMTPTransport(_smtpSession, new URLName("smtp", _smtpHost, _smtpPort, null, _smtpUsername, _smtpPassword));
