@@ -36,6 +36,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
 
     private static final Logger s_logger = Logger.getLogger(KVMHAMonitor.class);
     private final Map<String, NfsStoragePool> _storagePool = new ConcurrentHashMap<>();
+    private final boolean rebootHostAndAlertManagementOnHearbeatTimeout;
 
     /* private ip address */
     private final String _hostIP;
@@ -48,6 +49,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
         configureHeartBeatPath(scriptPath);
 
         _heartBeatUpdateTimeout = AgentPropertyFile.getProperty(AgentProperty.HEARTBEAT_UPDATE_TIMEOUT);
+        rebootHostAndAlertManagementOnHearbeatTimeout = AgentPropertyFile.getProperty(AgentProperty.REBOOT_HOST_AND_ALERT_MANAGEMENT_ON_HEARBEAT_TIMEOUT);
     }
 
     private static synchronized void configureHeartBeatPath(String scriptPath) {
@@ -139,7 +141,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
 
                 }
 
-                if (result != null) {
+                if (result != null && rebootHostAndAlertManagementOnHearbeatTimeout) {
                     s_logger.warn(String.format("Write heartbeat for pool [%s] failed: %s; stopping cloudstack-agent.", uuid, result));
                     Script cmd = new Script(s_heartBeatPath, _heartBeatUpdateTimeout, s_logger);
                     cmd.add("-i", primaryStoragePool._poolIp);
