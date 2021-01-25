@@ -24,26 +24,26 @@ package com.cloud.agent.properties;
  *
  * @param <T> type of the default value.
  */
-public class AgentProperty<T>{
+public class AgentProperties<T>{
 
     /**
      * Heartbeat update timeout. <br>
      * Data type: int. <br>
      * Default value: 60000 (ms).
     */
-    public static final AgentProperty<Integer> HEARTBEAT_UPDATE_TIMEOUT = new AgentProperty<Integer>("hearbeat.update.timeout", 60000);
+    public static final AgentProperties<Integer> HEARTBEAT_UPDATE_TIMEOUT = new AgentProperties<Integer>("hearbeat.update.timeout", 60000);
 
     /**
      * Reboot host and alert management on heartbeat timeout. <br>
      * Data type: boolean.<br>
      * Default value: true.
      */
-    public static final AgentProperty<Boolean> REBOOT_HOST_AND_ALERT_MANAGEMENT_ON_HEARBEAT_TIMEOUT = new AgentProperty<Boolean>("reboot.host.and.alert.management.on.hearbeat.timeout", true);
+    public static final AgentProperties<Boolean> REBOOT_HOST_AND_ALERT_MANAGEMENT_ON_HEARBEAT_TIMEOUT = new AgentProperties<Boolean>("reboot.host.and.alert.management.on.hearbeat.timeout", true);
 
     private final String name;
     private final T defaultValue;
 
-    private AgentProperty(String name, T value) {
+    private AgentProperties(String name, T value) {
         this.name = name;
         this.defaultValue = value;
     }
